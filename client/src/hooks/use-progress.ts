@@ -31,6 +31,9 @@ export function useProgress() {
     includeQuestInShare: false,
   });
   const [isLoaded, setIsLoaded] = useState(false);
+  // UI-only pulse to draw attention to the Journey drawer after a completion.
+  // Not persisted.
+  const [journeyPulse, setJourneyPulse] = useState(false);
 
   // Load from LocalStorage on mount
   useEffect(() => {
@@ -110,6 +113,12 @@ export function useProgress() {
       origin: { y: 0.6 },
       colors: ['#3b82f6', '#8b5cf6', '#ec4899']
     });
+
+    // After the confetti pop, highlight the Journey button briefly.
+    window.setTimeout(() => {
+      setJourneyPulse(true);
+      window.setTimeout(() => setJourneyPulse(false), 4500);
+    }, 650);
   };
 
   const toggleShareSetting = () => {
@@ -123,6 +132,7 @@ export function useProgress() {
     isLoaded,
     completeQuest,
     isTodayCompleted,
-    toggleShareSetting
+    toggleShareSetting,
+    journeyPulse
   };
 }

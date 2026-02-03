@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, LockKeyhole, Eye, Share2 } from 'lucide-react';
+import { Check, LockKeyhole, Eye, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
 import type { Quest } from '@/lib/quests';
 
 interface QuestCardProps {
@@ -13,6 +14,121 @@ interface QuestCardProps {
 
 export function QuestCard({ quest, isCompleted, onComplete }: QuestCardProps) {
   const [isRevealed, setIsRevealed] = useState(isCompleted);
+  const [showRemindOptions, setShowRemindOptions] = useState(false);
+  const [reminderAt, setReminderAt] = useState<number | null>(null);
+  const timeoutRef = useRef<number | null>(null);
+
+  const todayKey = useMemo(() => {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }, []);
+
+  const reminderStorageKey = 'nanoquest_reminder_at';
+  const reminderDateKey = 'nanoquest_reminder_date';
+
+  const clearReminder = () => {
+    if (timeoutRef.current) {
+      window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    localStorage.removeItem(reminderStorageKey);
+    localStorage.removeItem(reminderDateKey);
+    setReminderAt(null);
+  };
+
+  const scheduleReminder = async (hours: number) => {
+    const ms = Math.max(1, Math.min(6, hours)) * 60 * 60 * 1000;
+    const target = Date.now() + ms;
+
+    // Persist so refreshes keep the reminder.
+    localStorage.setItem(reminderStorageKey, String(target));
+    localStorage.setItem(reminderDateKey, todayKey);
+    setReminderAt(target);
+
+    // Clear any previous timeout.
+    if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
+    timeoutRef.current = window.setTimeout(() => {
+      toast({
+        title: 'Reminder',
+        description: "Come back and mark today's quest completed.",
+      });
+
+      // Best-effort browser notification (works only if the browser allows it).
+      try {
+        if ('Notification' in window && Notification.permission === 'granted') {
+          // eslint-disable-next-line no-new
+          new Notification('NanoQuest', { body: "Your quest is ready to be completed." });
+        }
+      } catch {
+        // Ignore.
+      }
+
+      clearReminder();
+    }, ms);
+
+    // Ask for notification permission only when user explicitly schedules.
+    if ('Notification' in window && Notification.permission === 'default') {
+      try {
+        await Notification.requestPermission();
+      } catch {
+        // Ignore.
+      }
+    }
+
+    toast({
+      title: 'Reminder set',
+      description: `We'll nudge you in ${hours} hour${hours === 1 ? '' : 's'}.`,
+    });
+  };
+
+  useEffect(() => {
+    // Load any existing reminder.
+    const storedDate = localStorage.getItem(reminderDateKey);
+    const storedAt = localStorage.getItem(reminderStorageKey);
+    if (!storedAt) return;
+
+    // If reminder is for a different day, clear it.
+    if (storedDate !== todayKey) {
+      clearReminder();
+      return;
+    }
+
+    const at = Number(storedAt);
+    if (!Number.isFinite(at) || at <= Date.now()) {
+      clearReminder();
+      return;
+    }
+
+    setReminderAt(at);
+    const ms = at - Date.now();
+    if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
+    timeoutRef.current = window.setTimeout(() => {
+      toast({
+        title: 'Reminder',
+        description: "Come back and mark today's quest completed.",
+      });
+      try {
+        if ('Notification' in window && Notification.permission === 'granted') {
+          // eslint-disable-next-line no-new
+          new Notification('NanoQuest', { body: "Your quest is ready to be completed." });
+        }
+      } catch {
+        // Ignore.
+      }
+      clearReminder();
+    }, ms);
+
+    return () => {
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [todayKey]);
 
   const handleReveal = () => {
     if (!isRevealed) setIsRevealed(true);
@@ -79,15 +195,84 @@ export function QuestCard({ quest, isCompleted, onComplete }: QuestCardProps) {
                       <Check className="w-8 h-8 text-primary" strokeWidth={3} />
                     </div>
                     <span className="font-semibold tracking-wide uppercase text-sm">Completed</span>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Check back tomorrow for your next quest!
+                    </p>
                   </motion.div>
                 ) : (
-                  <Button 
-                    size="lg" 
-                    onClick={() => onComplete(quest.id)}
-                    className="rounded-full px-8 py-6 text-lg font-semibold bg-gradient-to-r from-primary to-blue-600 hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0"
-                  >
-                    I Did It
-                  </Button>
+                  <div className="w-full flex flex-col items-center gap-3">
+                    {/* Remind Me */}
+                    <div className="w-full flex flex-col items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => setShowRemindOptions((v) => !v)}
+                        className="rounded-full px-6"
+                      >
+                        <Bell className="w-4 h-4 mr-2" />
+                        Remind me
+                      </Button>
+
+                      <AnimatePresence>
+                        {showRemindOptions && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -6 }}
+                            className="flex flex-wrap justify-center gap-2"
+                          >
+                            {[1, 2, 3, 4, 5, 6].map((h) => (
+                              <Button
+                                key={h}
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="rounded-full"
+                                onClick={() => {
+                                  setShowRemindOptions(false);
+                                  scheduleReminder(h);
+                                }}
+                              >
+                                {h}h
+                              </Button>
+                            ))}
+                            {reminderAt && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="rounded-full"
+                                onClick={() => {
+                                  clearReminder();
+                                  toast({ title: 'Reminder cleared' });
+                                }}
+                              >
+                                Clear
+                              </Button>
+                            )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {reminderAt && (
+                        <p className="text-xs text-muted-foreground">
+                          Reminder set in ~{Math.max(1, Math.round((reminderAt - Date.now()) / 60000))} min
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Complete */}
+                    <Button 
+                      size="lg" 
+                      onClick={() => {
+                        clearReminder();
+                        onComplete(quest.id);
+                      }}
+                      className="rounded-full px-8 py-6 text-lg font-semibold bg-gradient-to-r from-primary to-blue-600 hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0"
+                    >
+                      I Did It
+                    </Button>
+                  </div>
                 )}
               </motion.div>
             )}

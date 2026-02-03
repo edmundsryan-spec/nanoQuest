@@ -14,8 +14,8 @@ type Pack = {
 const PACKS: Pack[] = [
   {
     id: "productivity",
-    title: "Productivity Pack",
-    tagline: "Small actions that clear friction and get you moving.",
+    title: "Let Him Cook",
+    tagline: "Momentum quests for getting unstuck and shipping something.",
     examples: [
       "Do a 5‑minute cleanup sprint.",
       "Close every unused tab.",
@@ -24,7 +24,7 @@ const PACKS: Pack[] = [
   },
   {
     id: "social",
-    title: "Social Anxiety Fears Me Pack",
+    title: "Social Anxiety Fears Me",
     tagline: "Gentle social courage quests that build confidence.",
     examples: [
       "Say hello first.",
@@ -34,7 +34,7 @@ const PACKS: Pack[] = [
   },
   {
     id: "focus",
-    title: "Ninja Focus Pack",
+    title: "Ninja Focus",
     tagline: "Micro‑challenges for attention, calm, and deep work.",
     examples: [
       "Phone face down for 20 minutes.",

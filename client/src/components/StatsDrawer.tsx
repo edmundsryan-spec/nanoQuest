@@ -22,7 +22,7 @@ interface StatsDrawerProps {
 }
 
 export function StatsDrawer({ progressData, currentQuestText }: StatsDrawerProps) {
-  const { progress, toggleShareSetting } = progressData;
+  const { progress, toggleShareSetting, journeyPulse } = progressData;
   const [isOpen, setIsOpen] = useState(false);
 
   const handleShare = async () => {
@@ -54,7 +54,17 @@ export function StatsDrawer({ progressData, currentQuestText }: StatsDrawerProps
   return (
     <Drawer open={isOpen} onOpenChange={setIsOpen}>
       <DrawerTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full h-12 w-12 bg-secondary/50 hover:bg-secondary transition-colors">
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Your Journey"
+          className={
+            [
+              "rounded-full h-12 w-12 bg-secondary/50 hover:bg-secondary transition-colors",
+              journeyPulse ? "ring-2 ring-primary/60 animate-pulse" : "",
+            ].join(" ")
+          }
+        >
           <History className="h-5 w-5 text-foreground/80" />
         </Button>
       </DrawerTrigger>
