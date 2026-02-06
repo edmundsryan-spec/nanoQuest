@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { format, isToday, isYesterday, parseISO, differenceInCalendarDays } from 'date-fns';
 import confetti from 'canvas-confetti';
+import { playSound } from "@/lib/sound";
 
 // Zod Schema for LocalStorage
 const historyItemSchema = z.object({
@@ -105,9 +106,9 @@ export function useProgress() {
       bestStreak: newBestStreak,
       history: [newHistoryItem, ...prev.history].slice(0, 30), // Keep last 30 days
     }));
-
-    // Trigger celebration
-    confetti({
+s*// Trigger celebration
+s*playSound('complete');
+s*confetti({
       particleCount: 100,
       spread: 70,
       origin: { y: 0.6 },

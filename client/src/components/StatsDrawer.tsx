@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { History, Share2, Flame, Trophy, X, Settings2, Check } from "lucide-react";
 import type { useProgress } from "@/hooks/use-progress";
 import { QUESTS } from "@/lib/quests";
+import { isSoundEnabled, playSound, setSoundEnabled } from "@/lib/sound";
 
 interface StatsDrawerProps {
   progressData: ReturnType<typeof useProgress>;
@@ -24,8 +25,10 @@ interface StatsDrawerProps {
 export function StatsDrawer({ progressData, currentQuestText }: StatsDrawerProps) {
   const { progress, toggleShareSetting, journeyPulse } = progressData;
   const [isOpen, setIsOpen] = useState(false);
+  const [soundOn, setSoundOnState] = useState(isSoundEnabled());
 
   const handleShare = async () => {
+    playSound('click');
     let shareText = `NanoQuest streak: ${progress.currentStreak} days 🧠✨`;
     
     if (progress.includeQuestInShare && currentQuestText) {
@@ -58,6 +61,7 @@ export function StatsDrawer({ progressData, currentQuestText }: StatsDrawerProps
           variant="ghost"
           size="icon"
           aria-label="Your Journey"
+          onClick={() => playSound('click')}
           className={
             [
               "rounded-full h-12 w-12 bg-secondary/50 hover:bg-secondary transition-colors",
@@ -149,7 +153,25 @@ export function StatsDrawer({ progressData, currentQuestText }: StatsDrawerProps
                 <Switch 
                   id="share-text" 
                   checked={progress.includeQuestInShare}
-                  onCheckedChange={toggleShareSetting}
+                  onCheckedChange={() => {
+                    playSound("click");
+                    toggleShareSetting();
+                  }}
+                />
+              </div>
+
+              <div className="mt-4 flex items-center justify-between">
+                <Label htmlFor="sound-effects" className="text-sm text-muted-foreground cursor-pointer">
+                  Sound effects
+                </Label>
+                <Switch
+                  id="sound-effects"
+                  checked={soundOn}
+                  onCheckedChange={(value) => {
+                    playSound("click");
+                    setSoundEnabled(!!value);
+                    setSoundOnState(!!value);
+                  }}
                 />
               </div>
             </div>

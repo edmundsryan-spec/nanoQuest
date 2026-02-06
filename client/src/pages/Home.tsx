@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { Sparkles, Flame, Package } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { playSound } from "@/lib/sound";
 
 export default function Home() {
   const { quest } = useDailyQuest();
@@ -53,7 +54,7 @@ export default function Home() {
 
             {/* Packs */}
             <Button variant="ghost" size="icon" asChild aria-label="Packs">
-              <Link href="/packs">
+              <Link href="/packs" onClick={() => playSound('click')}>
                 <Package className="w-4 h-4" />
               </Link>
             </Button>

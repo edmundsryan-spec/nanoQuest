@@ -4,6 +4,7 @@ import { Check, LockKeyhole, Eye, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
+import { playSound } from '@/lib/sound';
 import type { Quest } from '@/lib/quests';
 
 interface QuestCardProps {
@@ -131,6 +132,7 @@ export function QuestCard({ quest, isCompleted, onComplete }: QuestCardProps) {
   }, [todayKey]);
 
   const handleReveal = () => {
+    playSound('click');
     if (!isRevealed) setIsRevealed(true);
   };
 
@@ -229,6 +231,7 @@ export function QuestCard({ quest, isCompleted, onComplete }: QuestCardProps) {
                                 size="sm"
                                 className="rounded-full"
                                 onClick={() => {
+                                  playSound('click');
                                   setShowRemindOptions(false);
                                   scheduleReminder(h);
                                 }}
@@ -243,6 +246,7 @@ export function QuestCard({ quest, isCompleted, onComplete }: QuestCardProps) {
                                 size="sm"
                                 className="rounded-full"
                                 onClick={() => {
+                                  playSound('click');
                                   clearReminder();
                                   toast({ title: 'Reminder cleared' });
                                 }}
@@ -265,6 +269,7 @@ export function QuestCard({ quest, isCompleted, onComplete }: QuestCardProps) {
                     <Button 
                       size="lg" 
                       onClick={() => {
+                        playSound('click');
                         clearReminder();
                         onComplete(quest.id);
                       }}
