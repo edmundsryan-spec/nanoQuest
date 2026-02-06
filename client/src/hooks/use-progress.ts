@@ -106,9 +106,9 @@ export function useProgress() {
       bestStreak: newBestStreak,
       history: [newHistoryItem, ...prev.history].slice(0, 30), // Keep last 30 days
     }));
-s*// Trigger celebration
-s*playSound('complete');
-s*confetti({
+// Trigger celebration
+playSound('complete');
+confetti({
       particleCount: 100,
       spread: 70,
       origin: { y: 0.6 },
