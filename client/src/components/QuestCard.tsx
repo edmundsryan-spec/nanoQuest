@@ -269,7 +269,6 @@ export function QuestCard({ quest, isCompleted, onComplete }: QuestCardProps) {
                     <Button 
                       size="lg" 
                       onClick={() => {
-                        playSound('click');
                         clearReminder();
                         onComplete(quest.id);
                       }}
