@@ -1,18 +1,27 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
-import { 
-  Drawer, 
-  DrawerContent, 
-  DrawerHeader, 
-  DrawerTitle, 
+import { AnimatePresence, motion } from "framer-motion";
+import { shareText } from "@/lib/share";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
   DrawerTrigger,
-  DrawerFooter,
-  DrawerClose
+  DrawerClose,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { History, Share2, Flame, Trophy, X, Settings2, Check } from "lucide-react";
+import {
+  History,
+  Share2,
+  Flame,
+  Trophy,
+  X,
+  Settings2,
+  Check,
+} from "lucide-react";
 import type { useProgress } from "@/hooks/use-progress";
 import { QUESTS } from "@/lib/quests";
 import { isSoundEnabled, playSound, setSoundEnabled } from "@/lib/sound";
@@ -23,34 +32,61 @@ interface StatsDrawerProps {
 }
 
 export function StatsDrawer({ progressData, currentQuestText }: StatsDrawerProps) {
-  const { progress, toggleShareSetting, journeyPulse } = progressData;
+  const { progress, toggleShareSetting, journeyPulse, isTodayCompleted } = progressData;
   const [isOpen, setIsOpen] = useState(false);
   const [soundOn, setSoundOnState] = useState(isSoundEnabled());
 
-  const handleShare = async () => {
-    playSound('click');
-    let shareText = `NanoQuest streak: ${progress.currentStreak} days 🧠✨`;
-    
-    if (progress.includeQuestInShare && currentQuestText) {
-      shareText += `\n\nToday's Quest: "${currentQuestText}"`;
+  const todayKey = useMemo(() => {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }, []);
+
+  const teaseDismissKey = `nanoquest_journey_tease_dismissed_${todayKey}`;
+
+  const [teaseDismissed, setTeaseDismissed] = useState(() => {
+    try {
+      return localStorage.getItem(teaseDismissKey) === "1";
+    } catch {
+      return false;
     }
-    
-    if (progress.currentStreak >= 3) {
-      shareText += `\n\nnanoquest.app`;
+  });
+
+  const showJourneyTease =
+    isTodayCompleted &&
+    progress.currentStreak >= 3 &&
+    progress.currentStreak % 2 === 1 &&
+    !isOpen &&
+    !teaseDismissed;
+
+  const handleShare = async () => {
+    playSound("click");
+
+    let message = `NanoQuest streak: ${progress.currentStreak} day${progress.currentStreak === 1 ? "" : "s"} 🧠✨`;
+
+    if (progress.includeQuestInShare && currentQuestText) {
+      message += `\n\nToday's Quest: "${currentQuestText}"`;
     }
 
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'NanoQuest',
-          text: shareText,
-        });
-      } catch (err) {
-        console.log('Share cancelled');
-      }
-    } else {
-      navigator.clipboard.writeText(shareText);
-      alert('Copied to clipboard!');
+    const url = progress.currentStreak >= 3 ? "https://nanoquest.app" : undefined;
+
+    try {
+      await shareText(message, url);
+    } catch (err) {
+      console.error("Share failed", err);
+      alert("Could not open the share dialog.");
+    }
+  };
+
+  const dismissJourneyTease = () => {
+    playSound("click");
+    setTeaseDismissed(true);
+    try {
+      localStorage.setItem(teaseDismissKey, "1");
+    } catch {
+      // ignore
     }
   };
 
@@ -61,22 +97,64 @@ export function StatsDrawer({ progressData, currentQuestText }: StatsDrawerProps
           variant="ghost"
           size="icon"
           aria-label="Your Journey"
-          onClick={() => playSound('click')}
-          className={
-            [
-              "rounded-full h-12 w-12 bg-secondary/50 hover:bg-secondary transition-colors",
-              journeyPulse ? "ring-2 ring-primary/60 animate-pulse" : "",
-            ].join(" ")
-          }
+          onClick={() => playSound("click")}
+          className={[
+            "rounded-full h-12 w-12 bg-secondary/50 hover:bg-secondary transition-colors",
+            journeyPulse ? "ring-2 ring-primary/60 animate-pulse" : "",
+          ].join(" ")}
         >
           <History className="h-5 w-5 text-foreground/80" />
         </Button>
       </DrawerTrigger>
+
+      <AnimatePresence>
+        {showJourneyTease && (
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            transition={{ duration: 0.28, ease: "easeOut" }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40"
+          >
+            <div className="rounded-full bg-background/95 border border-border shadow-lg px-4 py-2 flex items-center gap-3 backdrop-blur min-w-[280px] max-w-[90vw]">
+              <button
+                type="button"
+                onClick={() => {
+                  playSound("click");
+                  setIsOpen(true);
+                }}
+                className="flex-1 flex items-center justify-between gap-3 text-left"
+              >
+                <span className="text-sm font-medium text-foreground">
+                  Your Journey is ready to share
+                </span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-primary">
+                  Open
+                </span>
+              </button>
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full shrink-0"
+                onClick={dismissJourneyTease}
+                aria-label="Dismiss journey teaser"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <DrawerContent className="max-w-md mx-auto rounded-t-[2rem]">
         <div className="mx-auto w-full max-w-sm">
           <DrawerHeader className="border-b pb-6 mb-6">
             <div className="flex items-center justify-between">
-              <DrawerTitle className="text-2xl font-display font-bold">Your Journey</DrawerTitle>
+              <DrawerTitle className="text-2xl font-display font-bold">
+                Your Journey
+              </DrawerTitle>
               <DrawerClose asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
                   <X className="h-4 w-4" />
@@ -97,7 +175,7 @@ export function StatsDrawer({ progressData, currentQuestText }: StatsDrawerProps
                   Current Streak
                 </div>
               </div>
-              
+
               <div className="bg-purple-50 dark:bg-purple-950/20 p-5 rounded-2xl border border-purple-100 dark:border-purple-900/50 flex flex-col items-center text-center">
                 <Trophy className="w-8 h-8 text-purple-500 mb-2" />
                 <div className="text-3xl font-bold text-purple-700 dark:text-purple-400 font-display">
@@ -116,15 +194,18 @@ export function StatsDrawer({ progressData, currentQuestText }: StatsDrawerProps
               </h4>
               <div className="space-y-3">
                 {progress.history.slice(0, 7).map((item, i) => {
-                  const quest = QUESTS.find(q => q.id === item.questId);
+                  const quest = QUESTS.find((q) => q.id === item.questId);
                   return (
-                    <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-secondary/30">
+                    <div
+                      key={i}
+                      className="flex items-center justify-between p-3 rounded-xl bg-secondary/30"
+                    >
                       <div className="flex flex-col">
                         <span className="text-xs font-medium text-muted-foreground">
-                          {format(parseISO(item.date), 'EEE, MMM d')}
+                          {format(parseISO(item.date), "EEE, MMM d")}
                         </span>
                         <span className="text-sm font-medium text-foreground line-clamp-1">
-                          {quest ? quest.text : 'Unknown Quest'}
+                          {quest ? quest.text : "Unknown Quest"}
                         </span>
                       </div>
                       <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400 flex items-center justify-center">
@@ -133,6 +214,7 @@ export function StatsDrawer({ progressData, currentQuestText }: StatsDrawerProps
                     </div>
                   );
                 })}
+
                 {progress.history.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground text-sm italic">
                     No history yet. Start your first quest!
@@ -146,12 +228,16 @@ export function StatsDrawer({ progressData, currentQuestText }: StatsDrawerProps
               <h4 className="flex items-center gap-2 text-sm font-semibold mb-4">
                 <Settings2 className="w-4 h-4" /> Sharing Preferences
               </h4>
+
               <div className="flex items-center justify-between">
-                <Label htmlFor="share-text" className="text-sm text-muted-foreground cursor-pointer">
+                <Label
+                  htmlFor="share-text"
+                  className="text-sm text-muted-foreground cursor-pointer"
+                >
                   Include quest text when sharing
                 </Label>
-                <Switch 
-                  id="share-text" 
+                <Switch
+                  id="share-text"
                   checked={progress.includeQuestInShare}
                   onCheckedChange={() => {
                     playSound("click");
@@ -161,7 +247,10 @@ export function StatsDrawer({ progressData, currentQuestText }: StatsDrawerProps
               </div>
 
               <div className="mt-4 flex items-center justify-between">
-                <Label htmlFor="sound-effects" className="text-sm text-muted-foreground cursor-pointer">
+                <Label
+                  htmlFor="sound-effects"
+                  className="text-sm text-muted-foreground cursor-pointer"
+                >
                   Sound effects
                 </Label>
                 <Switch
@@ -176,7 +265,10 @@ export function StatsDrawer({ progressData, currentQuestText }: StatsDrawerProps
               </div>
             </div>
 
-            <Button onClick={handleShare} className="w-full rounded-xl py-6 text-lg font-semibold gap-2">
+            <Button
+              onClick={handleShare}
+              className="w-full rounded-xl py-6 text-lg font-semibold gap-2"
+            >
               <Share2 className="w-5 h-5" />
               Share My Streak
             </Button>

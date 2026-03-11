@@ -6,6 +6,11 @@ import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { playSound } from '@/lib/sound';
 import type { Quest } from '@/lib/quests';
+import {
+  scheduleReminder as scheduleAppReminder,
+  clearReminder as clearAppReminder,
+  requestReminderPermission,
+} from "@/lib/notify";
 
 interface QuestCardProps {
   quest: Quest;
@@ -30,106 +35,66 @@ export function QuestCard({ quest, isCompleted, onComplete }: QuestCardProps) {
   const reminderStorageKey = 'nanoquest_reminder_at';
   const reminderDateKey = 'nanoquest_reminder_date';
 
-  const clearReminder = () => {
-    if (timeoutRef.current) {
-      window.clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
+const clearReminder = async () => {
+  if (timeoutRef.current) {
+    window.clearTimeout(timeoutRef.current);
+    timeoutRef.current = null;
+  }
+
+  await clearAppReminder();
+
+  localStorage.removeItem(reminderStorageKey);
+  localStorage.removeItem(reminderDateKey);
+  setReminderAt(null);
+};
+
+const scheduleReminder = async (hours: number) => {
+  const granted = await requestReminderPermission();
+
+  if (!granted) {
+    toast({
+      title: "Notifications off",
+      description: "Enable notifications to get reminders.",
+    });
+    return;
+  }
+
+  const target = await scheduleAppReminder(hours);
+
+  localStorage.setItem(reminderStorageKey, String(target));
+  localStorage.setItem(reminderDateKey, todayKey);
+  setReminderAt(target);
+
+  toast({
+    title: "Reminder set",
+    description: `We'll nudge you in ${hours} hour${hours === 1 ? "" : "s"}.`,
+  });
+};
+
+  useEffect(() => {
+  const storedDate = localStorage.getItem(reminderDateKey);
+  const storedAt = localStorage.getItem(reminderStorageKey);
+
+  if (!storedAt) return;
+
+  if (storedDate !== todayKey) {
     localStorage.removeItem(reminderStorageKey);
     localStorage.removeItem(reminderDateKey);
     setReminderAt(null);
-  };
+    return;
+  }
 
-  const scheduleReminder = async (hours: number) => {
-    const ms = Math.max(1, Math.min(6, hours)) * 60 * 60 * 1000;
-    const target = Date.now() + ms;
+  const at = Number(storedAt);
 
-    // Persist so refreshes keep the reminder.
-    localStorage.setItem(reminderStorageKey, String(target));
-    localStorage.setItem(reminderDateKey, todayKey);
-    setReminderAt(target);
+  if (!Number.isFinite(at) || at <= Date.now()) {
+    localStorage.removeItem(reminderStorageKey);
+    localStorage.removeItem(reminderDateKey);
+    setReminderAt(null);
+    return;
+  }
 
-    // Clear any previous timeout.
-    if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
-    timeoutRef.current = window.setTimeout(() => {
-      toast({
-        title: 'Reminder',
-        description: "Come back and mark today's quest completed.",
-      });
-
-      // Best-effort browser notification (works only if the browser allows it).
-      try {
-        if ('Notification' in window && Notification.permission === 'granted') {
-          // eslint-disable-next-line no-new
-          new Notification('NanoQuest', { body: "Your quest is ready to be completed." });
-        }
-      } catch {
-        // Ignore.
-      }
-
-      clearReminder();
-    }, ms);
-
-    // Ask for notification permission only when user explicitly schedules.
-    if ('Notification' in window && Notification.permission === 'default') {
-      try {
-        await Notification.requestPermission();
-      } catch {
-        // Ignore.
-      }
-    }
-
-    toast({
-      title: 'Reminder set',
-      description: `We'll nudge you in ${hours} hour${hours === 1 ? '' : 's'}.`,
-    });
-  };
-
-  useEffect(() => {
-    // Load any existing reminder.
-    const storedDate = localStorage.getItem(reminderDateKey);
-    const storedAt = localStorage.getItem(reminderStorageKey);
-    if (!storedAt) return;
-
-    // If reminder is for a different day, clear it.
-    if (storedDate !== todayKey) {
-      clearReminder();
-      return;
-    }
-
-    const at = Number(storedAt);
-    if (!Number.isFinite(at) || at <= Date.now()) {
-      clearReminder();
-      return;
-    }
-
-    setReminderAt(at);
-    const ms = at - Date.now();
-    if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
-    timeoutRef.current = window.setTimeout(() => {
-      toast({
-        title: 'Reminder',
-        description: "Come back and mark today's quest completed.",
-      });
-      try {
-        if ('Notification' in window && Notification.permission === 'granted') {
-          // eslint-disable-next-line no-new
-          new Notification('NanoQuest', { body: "Your quest is ready to be completed." });
-        }
-      } catch {
-        // Ignore.
-      }
-      clearReminder();
-    }, ms);
-
-    return () => {
-      if (timeoutRef.current) {
-        window.clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [todayKey]);
+  setReminderAt(at);
+}, [todayKey]);
 
   const handleReveal = () => {
     playSound('click');
@@ -245,11 +210,11 @@ export function QuestCard({ quest, isCompleted, onComplete }: QuestCardProps) {
                                 variant="ghost"
                                 size="sm"
                                 className="rounded-full"
-                                onClick={() => {
-                                  playSound('click');
-                                  clearReminder();
-                                  toast({ title: 'Reminder cleared' });
-                                }}
+                                onClick={async () => {
+                                playSound("click");
+                                await clearReminder();
+                                toast({ title: "Reminder cleared" });
+                              }}
                               >
                                 Clear
                               </Button>
@@ -268,10 +233,10 @@ export function QuestCard({ quest, isCompleted, onComplete }: QuestCardProps) {
                     {/* Complete */}
                     <Button 
                       size="lg" 
-                      onClick={() => {
-                        clearReminder();
-                        onComplete(quest.id);
-                      }}
+                     onClick={async () => {
+                     await clearReminder();
+                     onComplete(quest.id);
+                     }}
                       className="rounded-full px-8 py-6 text-lg font-semibold bg-gradient-to-r from-primary to-blue-600 hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0"
                     >
                       I Did It

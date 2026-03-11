@@ -85,7 +85,7 @@ export default function Packs() {
                 Packs
               </h1>
               <p className="text-sm text-muted-foreground font-medium mt-1">
-                Extra quest sets (unlocks in the mobile app)
+                Unlock extra quest sets (unlocks in the mobile app)
               </p>
             </div>
           </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { format, isToday, isYesterday, parseISO, differenceInCalendarDays } from 'date-fns';
-import confetti from 'canvas-confetti';
+import { burstConfetti } from "@/lib/confetti";
 import { playSound } from "@/lib/sound";
 
 // Zod Schema for LocalStorage
@@ -108,18 +108,14 @@ export function useProgress() {
     }));
 // Trigger celebration
 playSound('complete');
-confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: ['#3b82f6', '#8b5cf6', '#ec4899']
-    });
+
+burstConfetti();
 
     // After the confetti pop, highlight the Journey button briefly.
     window.setTimeout(() => {
       setJourneyPulse(true);
       window.setTimeout(() => setJourneyPulse(false), 4500);
-    }, 650);
+    }, 750);
   };
 
   const toggleShareSetting = () => {

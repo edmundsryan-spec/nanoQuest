@@ -40,7 +40,7 @@ export default function Home() {
           <div>
             <h1 className="text-xl font-bold font-display tracking-tight flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" />
-              NanoQuest
+              nanoQuest
             </h1>
             <p className="text-sm text-muted-foreground font-medium mt-1">{todayDisplay}</p>
           </div>
