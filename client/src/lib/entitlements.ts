@@ -1,34 +1,36 @@
+export type PackId = "productivity" | "social" | "focus";
+
 export type Entitlements = {
-  socialAnxietyFearsMe: boolean;
-  ninjaFocus: boolean;
-  letHimCook: boolean;
+  productivity: boolean;
+  social: boolean;
+  focus: boolean;
   dailyReminders: boolean;
-  unlockAll: boolean;
+  allPacks: boolean;
 };
 
 const STORAGE_KEY = "nanoquest_entitlements";
 
-const defaultEntitlements: Entitlements = {
-  socialAnxietyFearsMe: false,
-  ninjaFocus: false,
-  letHimCook: false,
+const DEFAULT_ENTITLEMENTS: Entitlements = {
+  productivity: false,
+  social: false,
+  focus: false,
   dailyReminders: false,
-  unlockAll: false,
+  allPacks: false,
 };
 
 export function getEntitlements(): Entitlements {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return defaultEntitlements;
+    if (!raw) return DEFAULT_ENTITLEMENTS;
 
     const parsed = JSON.parse(raw);
 
     return {
-      ...defaultEntitlements,
+      ...DEFAULT_ENTITLEMENTS,
       ...parsed,
     };
   } catch {
-    return defaultEntitlements;
+    return DEFAULT_ENTITLEMENTS;
   }
 }
 
@@ -53,13 +55,17 @@ export function resetEntitlements() {
   }
 }
 
-export function hasPack(
-  entitlements: Entitlements,
-  pack: "socialAnxietyFearsMe" | "ninjaFocus" | "letHimCook"
-) {
-  return entitlements.unlockAll || entitlements[pack];
+export function hasAllPacks(): boolean {
+  const entitlements = getEntitlements();
+  return entitlements.allPacks;
 }
 
-export function hasDailyReminders(entitlements: Entitlements) {
-  return entitlements.unlockAll || entitlements.dailyReminders;
+export function hasPack(packId: PackId): boolean {
+  const entitlements = getEntitlements();
+  return entitlements.allPacks || entitlements[packId];
+}
+
+export function hasDailyReminders(): boolean {
+  const entitlements = getEntitlements();
+  return entitlements.allPacks || entitlements.dailyReminders;
 }
