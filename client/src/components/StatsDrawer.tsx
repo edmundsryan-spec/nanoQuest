@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import type { useProgress } from "@/hooks/use-progress";
 import { QUESTS } from "@/lib/quests";
-import { isSoundEnabled, playSound, setSoundEnabled } from "@/lib/sound";
+import { playSound } from "@/lib/sound";
 
 interface StatsDrawerProps {
   progressData: ReturnType<typeof useProgress>;
@@ -34,7 +34,6 @@ interface StatsDrawerProps {
 export function StatsDrawer({ progressData, currentQuestText }: StatsDrawerProps) {
   const { progress, toggleShareSetting, journeyPulse, isTodayCompleted } = progressData;
   const [isOpen, setIsOpen] = useState(false);
-  const [soundOn, setSoundOnState] = useState(isSoundEnabled());
 
   const todayKey = useMemo(() => {
     const d = new Date();
@@ -245,6 +244,7 @@ export function StatsDrawer({ progressData, currentQuestText }: StatsDrawerProps
                   }}
                 />
               </div>
+            </div>
 
             <Button
               onClick={handleShare}
