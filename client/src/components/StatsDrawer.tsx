@@ -246,25 +246,6 @@ export function StatsDrawer({ progressData, currentQuestText }: StatsDrawerProps
                 />
               </div>
 
-              <div className="mt-4 flex items-center justify-between">
-                <Label
-                  htmlFor="sound-effects"
-                  className="text-sm text-muted-foreground cursor-pointer"
-                >
-                  Sound effects
-                </Label>
-                <Switch
-                  id="sound-effects"
-                  checked={soundOn}
-                  onCheckedChange={(value) => {
-                    playSound("click");
-                    setSoundEnabled(!!value);
-                    setSoundOnState(!!value);
-                  }}
-                />
-              </div>
-            </div>
-
             <Button
               onClick={handleShare}
               className="w-full rounded-xl py-6 text-lg font-semibold gap-2"

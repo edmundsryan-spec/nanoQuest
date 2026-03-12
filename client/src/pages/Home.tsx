@@ -7,6 +7,7 @@ import { Sparkles, Flame, Package } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { playSound } from "@/lib/sound";
+import { PreferencesDrawer } from "@/components/PreferencesDrawer";
 
 export default function Home() {
   const { quest } = useDailyQuest();
@@ -45,23 +46,38 @@ export default function Home() {
             <p className="text-sm text-muted-foreground font-medium mt-1">{todayDisplay}</p>
           </div>
           
-          <div className="flex items-center gap-2">
-            {/* Quick Streak Indicator */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 rounded-full text-sm font-bold border border-orange-100 dark:border-orange-900/30">
-              <Flame className="w-4 h-4 fill-orange-500 text-orange-500" />
-              <span>{progress.currentStreak}</span>
-            </div>
+         <div className="flex items-center gap-2">
+  {/* Quick Streak Indicator */}
+  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 rounded-full text-sm font-bold border border-orange-100 dark:border-orange-900/30">
+    <Flame className="w-4 h-4 fill-orange-500 text-orange-500" />
+    <span>{progress.currentStreak}</span>
+  </div>
 
-            {/* Packs */}
-            <Button variant="ghost" size="icon" asChild aria-label="Packs">
-              <Link href="/packs" onClick={() => playSound('click')}>
-                <Package className="w-4 h-4" />
-              </Link>
-            </Button>
-            
-            {/* Drawer Trigger */}
-            <StatsDrawer progressData={progressData} currentQuestText={quest.text} />
-          </div>
+  {/* Packs */}
+  <Button variant="ghost" size="icon" asChild aria-label="Packs">
+    <Link href="/packs" onClick={() => playSound("click")}>
+      <Package className="w-4 h-4" />
+    </Link>
+  </Button>
+
+  {/* Preferences */}
+  <PreferencesDrawer
+    hasDailyReminders={false}
+    onUpgradeDailyReminders={() => {
+      playSound("click");
+      // later: open billing flow or dedicated upgrade screen
+      alert("Daily Reminders will be available as a paid upgrade.");
+    }}
+    onRestorePurchases={() => {
+      playSound("click");
+      // later: wire Play Billing restore
+      alert("Restore purchases coming soon.");
+    }}
+  />
+
+  {/* Your Journey */}
+  <StatsDrawer progressData={progressData} currentQuestText={quest.text} />
+</div>
         </header>
 
         {/* Core Interaction Area */}
