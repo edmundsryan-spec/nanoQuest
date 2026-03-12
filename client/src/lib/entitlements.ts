@@ -1,20 +1,65 @@
-export type PackId = "productivity" | "social" | "focus";
+export type Entitlements = {
+  socialAnxietyFearsMe: boolean;
+  ninjaFocus: boolean;
+  letHimCook: boolean;
+  dailyReminders: boolean;
+  unlockAll: boolean;
+};
 
-/**
- * Web build entitlements.
- *
- * The web app is intended to stay free and does not sell packs.
- * When we wrap for Android/iOS, we can replace this logic to read
- * store ownership (Google Play Billing / Apple IAP) and enable packs.
- */
-export function hasPack(_pack: PackId): boolean {
-  return false;
+const STORAGE_KEY = "nanoquest_entitlements";
+
+const defaultEntitlements: Entitlements = {
+  socialAnxietyFearsMe: false,
+  ninjaFocus: false,
+  letHimCook: false,
+  dailyReminders: false,
+  unlockAll: false,
+};
+
+export function getEntitlements(): Entitlements {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return defaultEntitlements;
+
+    const parsed = JSON.parse(raw);
+
+    return {
+      ...defaultEntitlements,
+      ...parsed,
+    };
+  } catch {
+    return defaultEntitlements;
+  }
 }
 
-export function hasAllPacks(): boolean {
-  return false;
+export function setEntitlements(next: Partial<Entitlements>) {
+  const current = getEntitlements();
+  const merged = { ...current, ...next };
+
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+  } catch {
+    // ignore
+  }
+
+  return merged;
 }
 
-export function canPurchaseInThisBuild(): boolean {
-  return false;
+export function resetEntitlements() {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // ignore
+  }
+}
+
+export function hasPack(
+  entitlements: Entitlements,
+  pack: "socialAnxietyFearsMe" | "ninjaFocus" | "letHimCook"
+) {
+  return entitlements.unlockAll || entitlements[pack];
+}
+
+export function hasDailyReminders(entitlements: Entitlements) {
+  return entitlements.unlockAll || entitlements.dailyReminders;
 }
