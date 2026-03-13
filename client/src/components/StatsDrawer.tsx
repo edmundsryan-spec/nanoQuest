@@ -107,45 +107,48 @@ export function StatsDrawer({ progressData, currentQuestText }: StatsDrawerProps
       </DrawerTrigger>
 
       <AnimatePresence>
-        {showJourneyTease && (
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 16 }}
-            transition={{ duration: 0.28, ease: "easeOut" }}
-            className="fixed bottom-10 flex-justify-center -translate-x-1/2 z-40"
-          >
-            <div className="rounded-full bg-background/95 border border-border shadow-lg px-4 py-2 flex items-center gap-3 backdrop-blur min-w-[280px] max-w-[90vw]">
-              <button
-                type="button"
-                onClick={() => {
-                  playSound("click");
-                  setIsOpen(true);
-                }}
-                className="flex-1 flex items-center justify-between gap-3 text-left"
-              >
-                <span className="text-sm font-medium text-foreground">
-                  Your Journey is ready to share
-                </span>
-                <span className="text-xs font-semibold uppercase tracking-wide text-primary">
-                  Open
-                </span>
-              </button>
+  {showJourneyTease && (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9, y: 30 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+      className="fixed inset-0 flex items-center justify-center z-40 pointer-events-none"
+    >
+      <div className="pointer-events-auto rounded-2xl bg-background/95 border border-border shadow-xl px-6 py-4 flex items-center gap-4 backdrop-blur max-w-[90vw]">
+        
+        <button
+          type="button"
+          onClick={() => {
+            playSound("click");
+            setIsOpen(true);
+          }}
+          className="flex-1 text-left"
+        >
+          <div className="text-sm font-semibold text-foreground">
+            Your Journey is ready to share
+          </div>
 
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-full shrink-0"
-                onClick={dismissJourneyTease}
-                aria-label="Dismiss journey teaser"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          <div className="text-xs text-primary font-medium mt-1">
+            Tap to open
+          </div>
+        </button>
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 rounded-full shrink-0"
+          onClick={dismissJourneyTease}
+          aria-label="Dismiss journey teaser"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+
+      </div>
+    </motion.div>
+  )}
+</AnimatePresence>
 
       <DrawerContent className="max-w-md mx-auto rounded-t-[2rem]">
         <div className="mx-auto w-full max-w-sm">
