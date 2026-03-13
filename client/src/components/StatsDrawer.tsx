@@ -113,7 +113,7 @@ export function StatsDrawer({ progressData, currentQuestText }: StatsDrawerProps
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 16 }}
             transition={{ duration: 0.28, ease: "easeOut" }}
-            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40"
+            className="fixed bottom-10 flex-justify-center -translate-x-1/2 z-40"
           >
             <div className="rounded-full bg-background/95 border border-border shadow-lg px-4 py-2 flex items-center gap-3 backdrop-blur min-w-[280px] max-w-[90vw]">
               <button
