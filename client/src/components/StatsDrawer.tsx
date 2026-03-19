@@ -113,8 +113,8 @@ export function StatsDrawer({ progressData, currentQuestText }: StatsDrawerProps
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: 10 }}
       transition={{ duration: 0.28, ease: "easeOut" }}
-      className="fixed left-1/2 -translate-x-1/2 z-40 pointer-events-none"
-      style={{ top: "72%" }}
+      className="fixed inset-x-0 z-40 flex justify-center pointer-events-none"
+style={{ top: "72%" }}
     >
       <div className="pointer-events-auto rounded-2xl bg-background/95 border border-border shadow-xl px-5 py-4 flex items-center gap-4 backdrop-blur min-w-[280px] max-w-[90vw]">
         <button
