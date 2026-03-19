@@ -106,17 +106,17 @@ export function StatsDrawer({ progressData, currentQuestText }: StatsDrawerProps
         </Button>
       </DrawerTrigger>
 
-      <AnimatePresence>
+<AnimatePresence>
   {showJourneyTease && (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9, y: 30 }}
+      initial={{ opacity: 0, scale: 0.92, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
-      className="fixed inset-0 flex items-center justify-center z-40 pointer-events-none"
+      exit={{ opacity: 0, scale: 0.95, y: 10 }}
+      transition={{ duration: 0.28, ease: "easeOut" }}
+      className="fixed left-1/2 -translate-x-1/2 z-40 pointer-events-none"
+      style={{ top: "72%" }}
     >
-      <div className="pointer-events-auto rounded-2xl bg-background/95 border border-border shadow-xl px-6 py-4 flex items-center gap-4 backdrop-blur max-w-[90vw]">
-        
+      <div className="pointer-events-auto rounded-2xl bg-background/95 border border-border shadow-xl px-5 py-4 flex items-center gap-4 backdrop-blur min-w-[280px] max-w-[90vw]">
         <button
           type="button"
           onClick={() => {
@@ -126,11 +126,10 @@ export function StatsDrawer({ progressData, currentQuestText }: StatsDrawerProps
           className="flex-1 text-left"
         >
           <div className="text-sm font-semibold text-foreground">
-            Your Journey is ready to share
+            🔥 {progress.currentStreak}-day streak ready to share
           </div>
-
           <div className="text-xs text-primary font-medium mt-1">
-            Tap to open
+            Open Your Journey
           </div>
         </button>
 
@@ -144,7 +143,6 @@ export function StatsDrawer({ progressData, currentQuestText }: StatsDrawerProps
         >
           <X className="h-4 w-4" />
         </Button>
-
       </div>
     </motion.div>
   )}
